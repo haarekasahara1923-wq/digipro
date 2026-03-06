@@ -28,6 +28,7 @@ export async function initDB() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS bonus_links JSONB DEFAULT '[]'`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_product_id INTEGER`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_price DECIMAL(10,2)`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_description TEXT`;
 
   // ── Orders table ─────────────────────────────────────────────────────────
   await sql`

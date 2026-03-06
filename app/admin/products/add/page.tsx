@@ -14,7 +14,7 @@ export default function AddProductPage() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [form, setForm] = useState({
     name: '', description: '', original_price: '', discounted_price: '',
-    drive_link: '', order_bump_product_id: '', order_bump_price: '',
+    drive_link: '', order_bump_product_id: '', order_bump_price: '', order_bump_description: '',
   });
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -96,6 +96,7 @@ export default function AddProductPage() {
           bonus_links: validBonusLinks,
           order_bump_product_id: form.order_bump_product_id ? parseInt(form.order_bump_product_id) : null,
           order_bump_price: form.order_bump_price ? parseFloat(form.order_bump_price) : null,
+          order_bump_description: form.order_bump_description || null,
         }),
       });
       const data = await res.json();
@@ -273,14 +274,27 @@ export default function AddProductPage() {
               </div>
 
               {form.order_bump_product_id && (
-                <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Special Combo Price for Bump Product (₹) *</label>
-                  <input type="number" placeholder="e.g. 199 (discounted add-on price)"
-                    value={form.order_bump_price}
-                    onChange={e => setForm({ ...form, order_bump_price: e.target.value })}
-                    className="input-dark" />
-                  <p className="text-gray-600 text-xs mt-1.5">Buyers will see: "Add [bump product] for just ₹{form.order_bump_price || '?'} more!"</p>
-                </div>
+                <>
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Special Combo Price for Bump Product (₹) *</label>
+                    <input type="number" placeholder="e.g. 199"
+                      value={form.order_bump_price}
+                      onChange={e => setForm({ ...form, order_bump_price: e.target.value })}
+                      className="input-dark" />
+                    <p className="text-gray-600 text-xs mt-1.5">Buyers see: "Add [bump product] for just ₹{form.order_bump_price || '?'} more!"</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Promotional Description for Bump Offer</label>
+                    <textarea
+                      rows={3}
+                      placeholder="e.g. Perfect companion to this course — covers advanced topics you'll need!"
+                      value={form.order_bump_description}
+                      onChange={e => setForm({ ...form, order_bump_description: e.target.value })}
+                      className="input-dark resize-none"
+                    />
+                    <p className="text-gray-600 text-xs mt-1">This text appears in the bump offer box on the product page to convince buyers</p>
+                  </div>
+                </>
               )}
             </div>
 

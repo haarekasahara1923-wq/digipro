@@ -22,23 +22,25 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     bonus_links,
     order_bump_product_id,
     order_bump_price,
+    order_bump_description,
   } = body;
 
   const bonusJson = bonus_links !== undefined ? JSON.stringify(bonus_links) : undefined;
 
   const result = await sql`
     UPDATE products SET
-      name                  = COALESCE(${name}, name),
-      description           = COALESCE(${description}, description),
-      original_price        = COALESCE(${original_price}, original_price),
-      discounted_price      = COALESCE(${discounted_price}, discounted_price),
-      image_url             = COALESCE(${image_url}, image_url),
-      drive_link            = COALESCE(${drive_link}, drive_link),
-      is_active             = COALESCE(${is_active}, is_active),
-      bonus_links           = COALESCE(${bonusJson ?? null}::jsonb, bonus_links),
-      order_bump_product_id = COALESCE(${order_bump_product_id ?? null}, order_bump_product_id),
-      order_bump_price      = COALESCE(${order_bump_price ?? null}, order_bump_price),
-      updated_at            = NOW()
+      name                   = COALESCE(${name}, name),
+      description            = COALESCE(${description}, description),
+      original_price         = COALESCE(${original_price}, original_price),
+      discounted_price       = COALESCE(${discounted_price}, discounted_price),
+      image_url              = COALESCE(${image_url}, image_url),
+      drive_link             = COALESCE(${drive_link}, drive_link),
+      is_active              = COALESCE(${is_active}, is_active),
+      bonus_links            = COALESCE(${bonusJson ?? null}::jsonb, bonus_links),
+      order_bump_product_id  = COALESCE(${order_bump_product_id ?? null}, order_bump_product_id),
+      order_bump_price       = COALESCE(${order_bump_price ?? null}, order_bump_price),
+      order_bump_description = COALESCE(${order_bump_description ?? null}, order_bump_description),
+      updated_at             = NOW()
     WHERE id = ${params.id}
     RETURNING *
   `;

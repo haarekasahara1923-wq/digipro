@@ -15,6 +15,7 @@ interface Product {
   bonus_links: BonusLink[] | null;
   order_bump_product_id: number | null;
   order_bump_price: string | null;
+  order_bump_description: string | null;
 }
 
 export default function EditProductPage() {
@@ -26,7 +27,7 @@ export default function EditProductPage() {
   const [form, setForm] = useState({
     name: '', description: '', original_price: '', discounted_price: '',
     drive_link: '', image_url: '',
-    order_bump_product_id: '', order_bump_price: '',
+    order_bump_product_id: '', order_bump_price: '', order_bump_description: '',
   });
   const [bonusLinks, setBonusLinks] = useState<BonusLink[]>([]);
   const [allProducts, setAllProducts] = useState<{ id: number; name: string }[]>([]);
@@ -52,6 +53,7 @@ export default function EditProductPage() {
             image_url: p.image_url,
             order_bump_product_id: p.order_bump_product_id ? String(p.order_bump_product_id) : '',
             order_bump_price: p.order_bump_price || '',
+            order_bump_description: p.order_bump_description || '',
           });
           setBonusLinks(Array.isArray(p.bonus_links) ? p.bonus_links : []);
         }
@@ -120,6 +122,7 @@ export default function EditProductPage() {
           bonus_links: validBonusLinks,
           order_bump_product_id: form.order_bump_product_id ? parseInt(form.order_bump_product_id) : null,
           order_bump_price: form.order_bump_price ? parseFloat(form.order_bump_price) : null,
+          order_bump_description: form.order_bump_description || null,
           original_price: parseFloat(form.original_price),
           discounted_price: parseFloat(form.discounted_price),
         }),
@@ -281,16 +284,27 @@ export default function EditProductPage() {
                 </select>
               </div>
               {form.order_bump_product_id && (
-                <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Special Bump Price (₹)</label>
-                  <input type="number" placeholder="e.g. 199"
-                    value={form.order_bump_price}
-                    onChange={e => setForm({ ...form, order_bump_price: e.target.value })}
-                    className="input-dark" />
-                  <p className="text-gray-600 text-xs mt-1.5">
-                    Buyers see: "Add [product] for just ₹{form.order_bump_price || '?'} more!"
-                  </p>
-                </div>
+                <>
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Special Bump Price (₹)</label>
+                    <input type="number" placeholder="e.g. 199"
+                      value={form.order_bump_price}
+                      onChange={e => setForm({ ...form, order_bump_price: e.target.value })}
+                      className="input-dark" />
+                    <p className="text-gray-600 text-xs mt-1.5">
+                      Buyers see: "Add [product] for just ₹{form.order_bump_price || '?'} more!"
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Promotional Description for Bump Offer</label>
+                    <textarea rows={3}
+                      placeholder="e.g. Perfect companion — covers advanced topics you'll love!"
+                      value={form.order_bump_description}
+                      onChange={e => setForm({ ...form, order_bump_description: e.target.value })}
+                      className="input-dark resize-none" />
+                    <p className="text-gray-600 text-xs mt-1">Shown in the bump offer box on the product page</p>
+                  </div>
+                </>
               )}
             </div>
 

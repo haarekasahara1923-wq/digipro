@@ -9,12 +9,14 @@ export async function GET(
     const products = await sql`
       SELECT
         p.*,
+        bump.id               AS order_bump_id,
         bump.name             AS order_bump_name,
         bump.image_url        AS order_bump_image,
         bump.slug             AS order_bump_slug,
-        bump.description      AS order_bump_description,
+        bump.description      AS order_bump_product_description,
         bump.original_price   AS order_bump_original_price,
-        bump.discounted_price AS order_bump_original_discounted
+        bump.drive_link       AS order_bump_drive_link,
+        bump.bonus_links      AS order_bump_bonus_links
       FROM products p
       LEFT JOIN products bump ON p.order_bump_product_id = bump.id
       WHERE p.slug = ${params.slug}

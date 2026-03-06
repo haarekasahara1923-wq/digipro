@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     bonus_links = [],
     order_bump_product_id = null,
     order_bump_price = null,
+    order_bump_description = null,
   } = body;
 
   if (!name || !original_price || !discounted_price || !image_url || !drive_link) {
@@ -43,12 +44,12 @@ export async function POST(req: NextRequest) {
     const result = await sql`
       INSERT INTO products
         (name, description, original_price, discounted_price, image_url, drive_link, slug,
-         is_active, bonus_links, order_bump_product_id, order_bump_price)
+         is_active, bonus_links, order_bump_product_id, order_bump_price, order_bump_description)
       VALUES
         (${name}, ${description}, ${original_price}, ${discounted_price}, ${image_url},
          ${drive_link}, ${slug},
          true,
-         ${bonusJson}::jsonb, ${order_bump_product_id}, ${order_bump_price})
+         ${bonusJson}::jsonb, ${order_bump_product_id}, ${order_bump_price}, ${order_bump_description})
       RETURNING *
     `;
     return NextResponse.json({ product: result[0] });
