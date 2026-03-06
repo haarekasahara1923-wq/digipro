@@ -29,6 +29,7 @@ export async function initDB() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_product_id INTEGER`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_price DECIMAL(10,2)`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_description TEXT`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS price_usd DECIMAL(10,2)`;
 
   // ── Orders table ─────────────────────────────────────────────────────────
   await sql`

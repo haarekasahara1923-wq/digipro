@@ -16,6 +16,7 @@ interface Product {
   order_bump_product_id: number | null;
   order_bump_price: string | null;
   order_bump_description: string | null;
+  price_usd: string | null;
 }
 
 export default function EditProductPage() {
@@ -28,6 +29,7 @@ export default function EditProductPage() {
     name: '', description: '', original_price: '', discounted_price: '',
     drive_link: '', image_url: '',
     order_bump_product_id: '', order_bump_price: '', order_bump_description: '',
+    price_usd: '',
   });
   const [bonusLinks, setBonusLinks] = useState<BonusLink[]>([]);
   const [allProducts, setAllProducts] = useState<{ id: number; name: string }[]>([]);
@@ -54,6 +56,7 @@ export default function EditProductPage() {
             order_bump_product_id: p.order_bump_product_id ? String(p.order_bump_product_id) : '',
             order_bump_price: p.order_bump_price || '',
             order_bump_description: p.order_bump_description || '',
+            price_usd: p.price_usd || '',
           });
           setBonusLinks(Array.isArray(p.bonus_links) ? p.bonus_links : []);
         }
@@ -123,6 +126,7 @@ export default function EditProductPage() {
           order_bump_product_id: form.order_bump_product_id ? parseInt(form.order_bump_product_id) : null,
           order_bump_price: form.order_bump_price ? parseFloat(form.order_bump_price) : null,
           order_bump_description: form.order_bump_description || null,
+          price_usd: form.price_usd ? parseFloat(form.price_usd) : null,
           original_price: parseFloat(form.original_price),
           discounted_price: parseFloat(form.discounted_price),
         }),

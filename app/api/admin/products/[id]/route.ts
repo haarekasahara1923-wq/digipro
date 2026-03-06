@@ -23,6 +23,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     order_bump_product_id,
     order_bump_price,
     order_bump_description,
+    price_usd,
   } = body;
 
   const bonusJson = bonus_links !== undefined ? JSON.stringify(bonus_links) : undefined;
@@ -40,6 +41,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       order_bump_product_id  = COALESCE(${order_bump_product_id ?? null}, order_bump_product_id),
       order_bump_price       = COALESCE(${order_bump_price ?? null}, order_bump_price),
       order_bump_description = COALESCE(${order_bump_description ?? null}, order_bump_description),
+      price_usd              = COALESCE(${price_usd ?? null}, price_usd),
       updated_at             = NOW()
     WHERE id = ${params.id}
     RETURNING *

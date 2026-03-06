@@ -15,6 +15,7 @@ export default function AddProductPage() {
   const [form, setForm] = useState({
     name: '', description: '', original_price: '', discounted_price: '',
     drive_link: '', order_bump_product_id: '', order_bump_price: '', order_bump_description: '',
+    price_usd: '',
   });
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -97,6 +98,7 @@ export default function AddProductPage() {
           order_bump_product_id: form.order_bump_product_id ? parseInt(form.order_bump_product_id) : null,
           order_bump_price: form.order_bump_price ? parseFloat(form.order_bump_price) : null,
           order_bump_description: form.order_bump_description || null,
+          price_usd: form.price_usd ? parseFloat(form.price_usd) : null,
         }),
       });
       const data = await res.json();
@@ -153,6 +155,13 @@ export default function AddProductPage() {
                   <input type="number" placeholder="e.g. 499"
                     value={form.discounted_price} onChange={e => setForm({ ...form, discounted_price: e.target.value })} className="input-dark" />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block flex items-center gap-1.5">🌍 USD Price (Optional — for international PayPal buyers)</label>
+                <input type="number" step="0.01" placeholder="e.g. 9.99"
+                  value={form.price_usd} onChange={e => setForm({ ...form, price_usd: e.target.value })} className="input-dark" />
+                <p className="text-gray-600 text-xs mt-1">Leave empty if you don't want to accept USD / PayPal payments</p>
               </div>
 
               {form.original_price && form.discounted_price && (
