@@ -5,6 +5,7 @@ const sql = neon(process.env.DATABASE_URL!);
 export default sql;
 
 export async function initDB() {
+  // ── Products table ───────────────────────────────────────────────────────
   await sql`
     CREATE TABLE IF NOT EXISTS products (
       id SERIAL PRIMARY KEY,
@@ -21,6 +22,24 @@ export async function initDB() {
     )
   `;
 
+  // Migration: add is_active column if it doesn't exist (for older tables)
+  await sql`
+    ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true
+  `;
+
+  // Migration: set is_active = true for any products where it is NULL
+  await sql`
+    UPDATE products SET is_active = true WHERE is_active IS NULL
+  `;
+
+  // Migration: add updated_at if missing
+  await sql`
+    ALTER TABLE products
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()
+  `;
+
+  // ── Orders table ─────────────────────────────────────────────────────────
   await sql`
     CREATE TABLE IF NOT EXISTS orders (
       id SERIAL PRIMARY KEY,
@@ -39,6 +58,7 @@ export async function initDB() {
     )
   `;
 
+  // ── Admin table ──────────────────────────────────────────────────────────
   await sql`
     CREATE TABLE IF NOT EXISTS admin (
       id SERIAL PRIMARY KEY,
@@ -47,13 +67,4 @@ export async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
-
-  // Insert default admin if not exists (username: admin, password: admin123)
-  // CHANGE THIS PASSWORD IMMEDIATELY AFTER FIRST LOGIN
-  const existing = await sql`SELECT id FROM admin WHERE username = 'admin'`;
-  if (existing.length === 0) {
-    const bcrypt = await import('bcryptjs');
-    const hash = await bcrypt.hash('admin123', 12);
-    await sql`INSERT INTO admin (username, password_hash) VALUES ('admin', ${hash})`;
-  }
 }

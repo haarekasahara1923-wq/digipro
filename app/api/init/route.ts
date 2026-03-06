@@ -4,8 +4,9 @@ import { initDB } from '@/lib/db';
 export async function GET() {
   try {
     await initDB();
-    return NextResponse.json({ success: true, message: 'Database initialized' });
+    return NextResponse.json({ success: true, message: 'Database initialized & migrations applied' });
   } catch (error) {
+    console.error('initDB error:', error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

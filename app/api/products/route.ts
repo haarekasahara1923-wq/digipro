@@ -6,7 +6,7 @@ export async function GET() {
     const products = await sql`
       SELECT id, name, description, original_price, discounted_price, image_url, slug, created_at
       FROM products
-      WHERE is_active = true
+      WHERE is_active = true OR is_active IS NULL
       ORDER BY created_at DESC
     `;
     return NextResponse.json({ products });
