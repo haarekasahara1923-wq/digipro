@@ -1,14 +1,19 @@
 import type { Metadata } from 'next';
 import { DM_Sans } from 'next/font/google';
 import Script from 'next/script';
-import { Toaster } from 'react-hot-toast';
+import Providers from '@/components/Providers';
 import './globals.css';
 
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' });
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_STORE_NAME || 'Digital Store',
+  title: process.env.NEXT_PUBLIC_STORE_NAME || 'Digipro',
   description: process.env.NEXT_PUBLIC_STORE_TAGLINE || 'Premium Digital Products',
+  openGraph: {
+    title: process.env.NEXT_PUBLIC_STORE_NAME || 'Digipro',
+    description: process.env.NEXT_PUBLIC_STORE_TAGLINE || 'Premium Digital Products',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -18,7 +23,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className={`${dmSans.variable} font-body bg-dark text-white antialiased`}>
         {pixelId && (
@@ -45,18 +53,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </noscript>
           </>
         )}
-        {children}
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: '#1a1a1a',
-              color: '#fff',
-              border: '1px solid #FFD700',
-              borderRadius: '8px',
-            },
-          }}
-        />
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

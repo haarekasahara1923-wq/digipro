@@ -7,9 +7,18 @@ export async function GET(
 ) {
   try {
     const products = await sql`
-      SELECT id, name, description, original_price, discounted_price, image_url, slug, created_at
-      FROM products
-      WHERE slug = ${params.slug} AND is_active = true
+      SELECT
+        p.*,
+        bump.name             AS order_bump_name,
+        bump.image_url        AS order_bump_image,
+        bump.slug             AS order_bump_slug,
+        bump.description      AS order_bump_description,
+        bump.original_price   AS order_bump_original_price,
+        bump.discounted_price AS order_bump_original_discounted
+      FROM products p
+      LEFT JOIN products bump ON p.order_bump_product_id = bump.id
+      WHERE p.slug = ${params.slug}
+        AND (p.is_active = true OR p.is_active IS NULL)
     `;
 
     if (products.length === 0) {

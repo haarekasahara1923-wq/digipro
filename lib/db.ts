@@ -1,7 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL!);
-
 export default sql;
 
 export async function initDB() {
@@ -21,23 +20,13 @@ export async function initDB() {
       updated_at TIMESTAMP DEFAULT NOW()
     )
   `;
-
-  // Migration: add is_active column if it doesn't exist (for older tables)
-  await sql`
-    ALTER TABLE products
-    ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true
-  `;
-
-  // Migration: set is_active = true for any products where it is NULL
-  await sql`
-    UPDATE products SET is_active = true WHERE is_active IS NULL
-  `;
-
-  // Migration: add updated_at if missing
-  await sql`
-    ALTER TABLE products
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()
-  `;
+  // Migrations
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true`;
+  await sql`UPDATE products SET is_active = true WHERE is_active IS NULL`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS bonus_links JSONB DEFAULT '[]'`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_product_id INTEGER`;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_price DECIMAL(10,2)`;
 
   // ── Orders table ─────────────────────────────────────────────────────────
   await sql`
@@ -57,6 +46,7 @@ export async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS cart_items JSONB DEFAULT '[]'`;
 
   // ── Admin table ──────────────────────────────────────────────────────────
   await sql`
