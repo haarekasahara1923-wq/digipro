@@ -20,10 +20,11 @@ export async function initDB() {
       updated_at TIMESTAMP DEFAULT NOW()
     )
   `;
-  // Migrations
+  // Migrations for is_active
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true`;
-  await sql`UPDATE products SET is_active = true WHERE is_active IS NULL`;
-  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`;
+  // Set ALL products that don't have is_active=true explicitly to true
+  await sql`UPDATE products SET is_active = true WHERE is_active IS NULL OR is_active = false`;
+  await sql`ALTER TABLE products ALTER COLUMN is_active SET DEFAULT true`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS bonus_links JSONB DEFAULT '[]'`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_product_id INTEGER`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_price DECIMAL(10,2)`;

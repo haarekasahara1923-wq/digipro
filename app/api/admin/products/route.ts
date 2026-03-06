@@ -39,13 +39,21 @@ export async function POST(req: NextRequest) {
   const slug = generateSlug(name);
   const bonusJson = JSON.stringify(bonus_links);
 
-  const result = await sql`
-    INSERT INTO products
-      (name, description, original_price, discounted_price, image_url, drive_link, slug, bonus_links, order_bump_product_id, order_bump_price)
-    VALUES
-      (${name}, ${description}, ${original_price}, ${discounted_price}, ${image_url}, ${drive_link}, ${slug}, ${bonusJson}::jsonb, ${order_bump_product_id}, ${order_bump_price})
-    RETURNING *
-  `;
-
-  return NextResponse.json({ product: result[0] });
+  try {
+    const result = await sql`
+      INSERT INTO products
+        (name, description, original_price, discounted_price, image_url, drive_link, slug,
+         is_active, bonus_links, order_bump_product_id, order_bump_price)
+      VALUES
+        (${name}, ${description}, ${original_price}, ${discounted_price}, ${image_url},
+         ${drive_link}, ${slug},
+         true,
+         ${bonusJson}::jsonb, ${order_bump_product_id}, ${order_bump_price})
+      RETURNING *
+    `;
+    return NextResponse.json({ product: result[0] });
+  } catch (error) {
+    console.error('Product insert error:', error);
+    return NextResponse.json({ error: String(error) }, { status: 500 });
+  }
 }
