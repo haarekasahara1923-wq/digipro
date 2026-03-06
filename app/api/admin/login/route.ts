@@ -1,31 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import sql, { initDB } from '@/lib/db';
 import { signToken } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
-    await initDB();
-    const { username, password } = await req.json();
+    const { email, password } = await req.json();
 
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
     }
 
-    const admins = await sql`SELECT * FROM admin WHERE username = ${username}`;
+    // Compare against env variables — no DB lookup needed
+    const adminEmail = process.env.ADMIN_MAIL_ID;
+    const adminPassword = process.env.ADMIN_PASSWORD;
 
-    if (admins.length === 0) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    if (!adminEmail || !adminPassword) {
+      return NextResponse.json(
+        { error: 'Admin credentials not configured on server' },
+        { status: 500 }
+      );
     }
 
-    const admin = admins[0];
-    const valid = await bcrypt.compare(password, admin.password_hash);
+    const emailMatch = email.trim().toLowerCase() === adminEmail.trim().toLowerCase();
+    const passwordMatch = password === adminPassword;
 
-    if (!valid) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    if (!emailMatch || !passwordMatch) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const token = await signToken({ adminId: admin.id, username: admin.username });
+    // Sign JWT
+    const token = await signToken({ adminEmail, role: 'admin' });
 
     const response = NextResponse.json({ success: true });
     response.cookies.set('admin_session', token, {
@@ -38,7 +41,8 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    console.error('Admin login error:', error);
+    return NextResponse.json({ error: 'Login failed. Try again.' }, { status: 500 });
   }
 }
 
