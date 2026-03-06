@@ -82,7 +82,7 @@ export default function AddProductPage() {
   return (
     <div className="flex min-h-screen bg-dark">
       <AdminSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 md:ml-64 p-6 md:p-8 pt-20 md:pt-8">
         <div className="max-w-2xl">
           <div className="flex items-center gap-4 mb-8">
             <button onClick={() => router.back()} className="text-gray-500 hover:text-white transition-colors">

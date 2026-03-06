@@ -1,5 +1,17 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-export default function AdminPage() {
-  redirect('/admin/dashboard');
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function AdminRedirectPage() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/admin/dashboard');
+  }, [router]);
+
+  return (
+    <div className="min-h-screen bg-dark flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 }

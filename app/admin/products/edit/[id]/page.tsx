@@ -81,7 +81,7 @@ export default function EditProductPage() {
   if (loading) return (
     <div className="flex min-h-screen bg-dark">
       <AdminSidebar />
-      <main className="ml-64 flex-1 flex items-center justify-center">
+      <main className="flex-1 md:ml-64 flex items-center justify-center pt-14 md:pt-0">
         <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
       </main>
     </div>
@@ -90,7 +90,7 @@ export default function EditProductPage() {
   return (
     <div className="flex min-h-screen bg-dark">
       <AdminSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 md:ml-64 p-6 md:p-8 pt-20 md:pt-8">
         <div className="max-w-2xl">
           <div className="flex items-center gap-4 mb-8">
             <button onClick={() => router.back()} className="text-gray-500 hover:text-white transition-colors">

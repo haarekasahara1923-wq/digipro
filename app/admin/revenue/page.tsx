@@ -53,7 +53,7 @@ export default function RevenuePage() {
   return (
     <div className="flex min-h-screen bg-dark">
       <AdminSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 md:ml-64 p-6 md:p-8 pt-20 md:pt-8">
         <div className="mb-8">
           <h1 className="font-display text-4xl text-white">REVENUE</h1>
           <p className="text-gray-500 text-sm mt-1">Financial overview of your store</p>

@@ -68,7 +68,7 @@ export default function LeadsPage() {
   return (
     <div className="flex min-h-screen bg-dark">
       <AdminSidebar />
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 md:ml-64 p-6 md:p-8 pt-20 md:pt-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-display text-4xl text-white">LEADS</h1>
@@ -144,16 +144,14 @@ export default function LeadsPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
                           {statusIcon(order.status)}
-                          <span className={`text-xs ${
-                            order.status === 'paid' ? 'text-green-400' :
-                            order.status === 'pending' ? 'text-yellow-400' : 'text-red-400'
-                          }`}>{order.status}</span>
+                          <span className={`text-xs ${order.status === 'paid' ? 'text-green-400' :
+                              order.status === 'pending' ? 'text-yellow-400' : 'text-red-400'
+                            }`}>{order.status}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          order.drive_link_sent ? 'bg-green-500/10 text-green-400' : 'bg-gray-500/10 text-gray-500'
-                        }`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${order.drive_link_sent ? 'bg-green-500/10 text-green-400' : 'bg-gray-500/10 text-gray-500'
+                          }`}>
                           {order.drive_link_sent ? 'Sent' : 'Pending'}
                         </span>
                       </td>
