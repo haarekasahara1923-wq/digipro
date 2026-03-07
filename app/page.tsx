@@ -23,6 +23,7 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quickView, setQuickView] = useState<Product | null>(null);
   const [search, setSearch] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
   const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Digipro';
@@ -191,11 +192,47 @@ export default function HomePage() {
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {filtered.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} calcDisc={disc} />
+              <ProductCard key={product.id} product={product} index={i} calcDisc={disc} onQuickView={setQuickView} />
             ))}
           </div>
         )}
       </section>
+
+      {/* Quick View Modal */}
+      {quickView && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setQuickView(null)} />
+          <div className="relative bg-dark-2 border border-white/10 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col md:flex-row">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-white bg-dark-3 w-8 h-8 rounded-full flex items-center justify-center z-10"
+              onClick={() => setQuickView(null)}
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="w-full md:w-1/2 aspect-[4/3] relative flex-shrink-0 bg-dark-4">
+              <Image src={quickView.image_url} alt={quickView.name} fill className="object-cover" />
+            </div>
+            <div className="p-6 md:p-8 flex flex-col flex-1">
+              <h2 className="text-2xl font-display text-white mb-2 leading-tight">{quickView.name}</h2>
+              <div className="flex items-end gap-3 mb-6">
+                <span className="font-display text-4xl text-gold">₹{parseFloat(quickView.discounted_price).toLocaleString('en-IN')}</span>
+                <span className="price-original text-lg mb-1">₹{parseFloat(quickView.original_price).toLocaleString('en-IN')}</span>
+              </div>
+              <p className="text-gray-400 text-sm mb-8 leading-relaxed flex-1 whitespace-pre-wrap">
+                {quickView.description}
+              </p>
+              <Link href={`/products/${quickView.slug}`} className="w-full mt-auto">
+                <button
+                  className="w-full py-4 rounded-xl text-black font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
+                  style={{ background: 'linear-gradient(135deg,#FFD700,#F5A623)' }}
+                >
+                  Buy Now <ArrowRight className="w-5 h-5" />
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
@@ -204,8 +241,8 @@ export default function HomePage() {
 
 // ── Product Card ───────────────────────────────────────────────────────────
 function ProductCard({
-  product, index, calcDisc,
-}: { product: Product; index: number; calcDisc: (o: string, d: string) => number }) {
+  product, index, calcDisc, onQuickView
+}: { product: Product; index: number; calcDisc: (o: string, d: string) => number; onQuickView: (p: Product) => void }) {
   const { addItem, isInCart, openCart } = useCart();
   const discPct = calcDisc(product.original_price, product.discounted_price);
   const inCart = isInCart(product.slug);
@@ -229,8 +266,11 @@ function ProductCard({
       transition-all duration-300"
       style={{ animationDelay: `${index * 60}ms` }}
     >
-      {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-dark-3 flex-shrink-0">
+      {/* Image (Clickable for Quick View) */}
+      <div
+        className="relative aspect-[4/3] overflow-hidden bg-dark-3 flex-shrink-0 cursor-pointer"
+        onClick={() => onQuickView(product)}
+      >
         <Image
           src={product.image_url} alt={product.name} fill
           className="object-cover group-hover:scale-105 transition-transform duration-700"
@@ -263,7 +303,10 @@ function ProductCard({
       </div>
 
       {/* Content */}
-      <div className="p-3 sm:p-5 flex flex-col flex-1">
+      <div
+        className="p-3 sm:p-5 flex flex-col flex-1 cursor-pointer"
+        onClick={() => onQuickView(product)}
+      >
         <h3 className="font-display text-sm sm:text-xl text-white mb-1.5 sm:mb-2 leading-tight group-hover:text-gold transition-colors line-clamp-2">
           {product.name}
         </h3>
