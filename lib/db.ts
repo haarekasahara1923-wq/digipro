@@ -22,8 +22,8 @@ export async function initDB() {
   `;
   // Migrations for is_active
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true`;
-  // Set ALL products that don't have is_active=true explicitly to true
-  await sql`UPDATE products SET is_active = true WHERE is_active IS NULL OR is_active = false`;
+  // Note: We do NOT force all products to active here --
+  // that would override admin 'hide product' setting.
   await sql`ALTER TABLE products ALTER COLUMN is_active SET DEFAULT true`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS bonus_links JSONB DEFAULT '[]'`;
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS order_bump_product_id INTEGER`;

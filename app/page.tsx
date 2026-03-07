@@ -29,7 +29,6 @@ export default function HomePage() {
   const tagline = process.env.NEXT_PUBLIC_STORE_TAGLINE || 'Premium Digital Products';
 
   useEffect(() => {
-    fetch('/api/init').catch(() => { });
     fetch('/api/products')
       .then(r => r.json())
       .then(data => {
@@ -297,8 +296,8 @@ function ProductCard({
           <button
             onClick={handleAddToCart}
             className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${inCart
-                ? 'border-green-500/30 text-green-400 bg-green-500/8 hover:bg-green-500/15'
-                : 'border-white/8 text-gray-400 hover:text-gold hover:border-gold/25 hover:bg-gold/5'
+              ? 'border-green-500/30 text-green-400 bg-green-500/8 hover:bg-green-500/15'
+              : 'border-white/8 text-gray-400 hover:text-gold hover:border-gold/25 hover:bg-gold/5'
               }`}
           >
             <ShoppingCart className="w-3 h-3" />
