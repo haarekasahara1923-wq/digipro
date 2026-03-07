@@ -243,7 +243,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                 <div className="flex items-start gap-2 bg-dark-3 rounded-xl px-3 py-2.5 border border-white/5">
                   <Lock className="w-3.5 h-3.5 text-gold mt-0.5 flex-shrink-0" />
                   <p className="text-gray-500 text-xs leading-relaxed">
-                    Bonus links delivered privately to your Email & WhatsApp only after payment.
+                    Bonus links delivered privately to your Email only after payment.
                   </p>
                 </div>
               </div>
@@ -378,7 +378,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                     <ShoppingCart className="w-4 h-4" />
                     {inCart ? '✓ In Cart — View Cart' : bumpAdded ? 'Add Both to Cart' : 'Add to Cart'}
                   </button>
-                  <p className="text-center text-xs text-gray-600">🔒 Links delivered to Email & WhatsApp after payment</p>
+                  <p className="text-center text-xs text-gray-600">🔒 Links delivered to your Email after payment</p>
                 </div>
               ) : (
                 <div className="bg-dark-3 border border-white/10 rounded-2xl p-5 space-y-4">
@@ -440,7 +440,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                       )}
                     </div>
                   </div>
-                  <p className="text-center text-xs text-gray-600">🔒 Links delivered to Email & WhatsApp after payment</p>
+                  <p className="text-center text-xs text-gray-600">🔒 Links delivered to your Email after payment</p>
                 </div>
               ) : (
                 <div className="bg-dark-2 border border-white/5 rounded-2xl p-5 text-center">

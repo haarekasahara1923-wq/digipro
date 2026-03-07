@@ -283,7 +283,6 @@ export default function CheckoutPage() {
                   onChange={e => setForm({ ...form, whatsapp: e.target.value })}
                   className="input-dark"
                 />
-                <p className="text-xs text-gray-600 mt-1">Download link will be sent on WhatsApp too</p>
               </div>
             </div>
 

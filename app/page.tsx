@@ -93,7 +93,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-gray-500 text-sm sm:text-base max-w-xl mx-auto mb-10 leading-relaxed">
-            Buy once. Download instantly. Delivered to your Email & WhatsApp.
+            Buy once. Download instantly. Delivered instantly to your Email.
             Pay in <span className="text-gold font-semibold">₹ INR</span> or <span className="text-blue-400 font-semibold">$ USD</span>.
           </p>
 
@@ -125,15 +125,15 @@ export default function HomePage() {
           </div>
 
           {/* Stats row */}
-          <div className="flex flex-wrap justify-center gap-6 sm:gap-10">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-4 sm:gap-10">
             {stats.map(({ icon: Icon, value, label }) => (
-              <div key={label} className="flex items-center gap-2 group">
-                <div className="w-7 h-7 bg-gold/10 rounded-lg flex items-center justify-center group-hover:bg-gold/20 transition-colors">
-                  <Icon className="w-3.5 h-3.5 text-gold" />
+              <div key={label} className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-1.5 sm:gap-2 group bg-white/5 sm:bg-transparent p-3 sm:p-0 rounded-2xl border border-white/5 sm:border-transparent">
+                <div className="w-8 h-8 sm:w-7 sm:h-7 bg-gold/10 rounded-lg flex items-center justify-center group-hover:bg-gold/20 transition-colors">
+                  <Icon className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-gold" />
                 </div>
-                <div className="text-left">
+                <div>
                   <p className="text-white text-sm font-bold leading-tight">{value}</p>
-                  <p className="text-gray-600 text-xs">{label}</p>
+                  <p className="text-gray-400 sm:text-gray-600 text-[11px] sm:text-xs">{label}</p>
                 </div>
               </div>
             ))}
@@ -162,14 +162,14 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="rounded-2xl overflow-hidden border border-white/5 animate-pulse">
                 <div className="aspect-[4/3] bg-dark-2" />
-                <div className="p-5 space-y-3 bg-dark-2">
-                  <div className="h-5 bg-dark-3 rounded w-3/4" />
-                  <div className="h-4 bg-dark-3 rounded w-1/2" />
-                  <div className="h-10 bg-dark-3 rounded" />
+                <div className="p-3 sm:p-5 space-y-3 bg-dark-2">
+                  <div className="h-4 sm:h-5 bg-dark-3 rounded w-3/4" />
+                  <div className="h-3 sm:h-4 bg-dark-3 rounded w-1/2" />
+                  <div className="h-8 sm:h-10 bg-dark-3 rounded" />
                 </div>
               </div>
             ))}
@@ -189,7 +189,7 @@ export default function HomePage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {filtered.map((product, i) => (
               <ProductCard key={product.id} product={product} index={i} calcDisc={disc} />
             ))}
@@ -239,75 +239,76 @@ function ProductCard({
         <div className="absolute inset-0 bg-gradient-to-t from-dark-2 via-dark-2/30 to-transparent" />
 
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col gap-1 sm:gap-1.5">
           {discPct > 0 && (
-            <span className="text-xs font-black text-black px-2.5 py-1 rounded-lg"
+            <span className="text-[10px] sm:text-xs font-black text-black px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg"
               style={{ background: 'linear-gradient(135deg,#FFD700,#F5A623)' }}>
-              -{discPct}% OFF
+              -{discPct}%
             </span>
           )}
           {hasUsd && (
-            <span className="text-xs font-bold text-blue-300 bg-blue-500/20 border border-blue-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1">
-              <Globe className="w-2.5 h-2.5" /> USD
+            <span className="text-[9px] sm:text-xs font-bold text-blue-300 bg-blue-500/20 border border-blue-500/20 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg flex items-center gap-1">
+              <Globe className="w-2 h-2 sm:w-2.5 sm:h-2.5" /> <span className="hidden sm:inline">USD</span>
             </span>
           )}
         </div>
 
         {inCart && (
-          <div className="absolute top-3 right-3">
-            <span className="text-xs font-bold text-green-400 bg-green-500/15 border border-green-500/20 px-2 py-1 rounded-lg flex items-center gap-1">
-              <CheckCircle className="w-2.5 h-2.5" /> In Cart
+          <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+            <span className="text-[9px] sm:text-xs font-bold text-green-400 bg-green-500/15 border border-green-500/20 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg flex items-center gap-1">
+              <CheckCircle className="w-2 h-2 sm:w-2.5 sm:h-2.5" /> <span className="hidden sm:inline">In Cart</span>
             </span>
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-5 flex flex-col flex-1">
-        <h3 className="font-display text-xl text-white mb-2 leading-tight group-hover:text-gold transition-colors line-clamp-2">
+      <div className="p-3 sm:p-5 flex flex-col flex-1">
+        <h3 className="font-display text-sm sm:text-xl text-white mb-1.5 sm:mb-2 leading-tight group-hover:text-gold transition-colors line-clamp-2">
           {product.name}
         </h3>
         {product.description && (
-          <p className="text-gray-600 text-xs mb-4 line-clamp-2 leading-relaxed flex-1">
+          <p className="text-gray-500 sm:text-gray-600 text-[10px] sm:text-xs mb-3 sm:mb-4 line-clamp-2 leading-relaxed flex-1">
             {product.description}
           </p>
         )}
 
         {/* Pricing */}
-        <div className="mb-4">
-          <div className="flex items-end gap-2">
-            <span className="font-display text-3xl text-gold leading-none">
+        <div className="mb-3 sm:mb-4">
+          <div className="flex items-end gap-1.5 sm:gap-2">
+            <span className="font-display text-lg sm:text-3xl text-gold leading-none">
               ₹{parseFloat(product.discounted_price).toLocaleString('en-IN')}
             </span>
-            <span className="price-original text-xs mb-0.5">
+            <span className="price-original text-[10px] sm:text-xs mb-0.5">
               ₹{parseFloat(product.original_price).toLocaleString('en-IN')}
             </span>
           </div>
           {hasUsd && (
-            <p className="text-blue-400 text-xs mt-1 flex items-center gap-1">
-              <Globe className="w-2.5 h-2.5" />
-              Also available at ${parseFloat(product.price_usd!).toFixed(2)} USD
+            <p className="text-blue-400 text-[9px] sm:text-xs mt-1 flex items-center gap-1">
+              <Globe className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+              <span className="hidden sm:inline">Also available at</span> ${parseFloat(product.price_usd!).toFixed(2)}
             </p>
           )}
         </div>
 
         {/* Actions */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col xl:flex-row xl:grid xl:grid-cols-2 gap-2">
           <button
             onClick={handleAddToCart}
-            className={`py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${inCart
+            className={`py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 border transition-all ${inCart
               ? 'border-green-500/30 text-green-400 bg-green-500/8 hover:bg-green-500/15'
               : 'border-white/8 text-gray-400 hover:text-gold hover:border-gold/25 hover:bg-gold/5'
               }`}
           >
             <ShoppingCart className="w-3 h-3" />
-            {inCart ? 'In Cart ✓' : 'Add to Cart'}
+            <span className="hidden sm:inline">{inCart ? 'In Cart ✓' : 'Add to Cart'}</span>
+            <span className="inline sm:hidden">{inCart ? 'Added' : 'Add'}</span>
           </button>
-          <Link href={`/products/${product.slug}`}>
-            <button className="w-full py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all text-black"
+          <Link href={`/products/${product.slug}`} className="w-full">
+            <button className="w-full py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black flex items-center justify-center gap-1 sm:gap-1.5 transition-all text-black"
               style={{ background: 'linear-gradient(135deg,#FFD700,#F5A623)' }}>
               Buy Now
-              <ArrowRight className="w-3 h-3" />
+              <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             </button>
           </Link>
         </div>

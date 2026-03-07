@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 
         // Send notifications
         try { await sendPurchaseEmail({ buyerEmail: order.buyer_email, buyerName: order.buyer_name, productName, allLinks, amount }); } catch (e) { console.error(e); }
-        try { await sendWhatsAppMessage({ phoneNumber: order.buyer_whatsapp, buyerName: order.buyer_name, productName, allLinks }); } catch (e) { console.error(e); }
+        // try { await sendWhatsAppMessage({ phoneNumber: order.buyer_whatsapp, buyerName: order.buyer_name, productName, allLinks }); } catch (e) { console.error(e); }
         try { await sendAdminSaleAlert({ buyerName: order.buyer_name, buyerEmail: order.buyer_email, buyerWhatsapp: order.buyer_whatsapp, productName, amount }); } catch (e) { console.error(e); }
 
         await sql`UPDATE orders SET drive_link_sent = true WHERE razorpay_order_id = ${'PP-' + orderID}`;

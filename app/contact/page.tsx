@@ -58,7 +58,7 @@ export default function ContactPage() {
                             {
                                 icon: MessageCircle,
                                 title: 'For Orders',
-                                value: 'Check your email & WhatsApp',
+                                value: 'Check your email',
                                 desc: 'Download links are sent automatically after payment',
                             },
                         ].map(({ icon: Icon, title, value, href, desc }) => (

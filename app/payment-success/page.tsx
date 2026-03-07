@@ -87,20 +87,7 @@ function SuccessContent() {
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="w-5 h-5 text-green-400" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <p className="text-white text-sm font-semibold">WhatsApp Message ✓</p>
-                  <span className="bg-green-500/10 text-green-400 text-xs px-2 py-0.5 rounded-full">Sent</span>
-                </div>
-                <p className="text-gray-500 text-xs">
-                  Download link{isMulti ? 's' : ''} sent to your WhatsApp number.
-                </p>
-              </div>
-            </div>
+
 
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-gold/10 border border-gold/20 rounded-xl flex items-center justify-center flex-shrink-0">

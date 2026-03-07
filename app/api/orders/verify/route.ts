@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 2. WhatsApp to buyer ───────────────────────────────────────────────
+    /* Temporarily dropped as per request
     try {
       await sendWhatsAppMessage({
         phoneNumber: order.buyer_whatsapp,
@@ -94,6 +95,7 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.error('❌ WhatsApp failed:', e);
     }
+    */
 
     // ── 3. Admin sale alert ────────────────────────────────────────────────
     try {

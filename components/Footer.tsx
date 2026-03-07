@@ -14,7 +14,7 @@ export default function Footer() {
                     {[
                         { icon: Shield, text: 'Secure Payments via Razorpay' },
                         { icon: Zap, text: 'Instant Digital Delivery' },
-                        { icon: Mail, text: 'Email + WhatsApp Delivery' },
+                        { icon: Mail, text: 'Instant Email Delivery' },
                     ].map(({ icon: Icon, text }) => (
                         <div key={text} className="flex items-center gap-2 text-gray-500 text-xs">
                             <Icon className="w-3.5 h-3.5 text-gold" />
@@ -36,7 +36,7 @@ export default function Footer() {
                     </div>
                     <p className="text-gray-500 text-sm leading-relaxed">{tagline}</p>
                     <p className="text-gray-600 text-xs mt-3">
-                        Premium digital products delivered instantly to your email and WhatsApp.
+                        Premium digital products delivered instantly to your email.
                     </p>
                 </div>
 
