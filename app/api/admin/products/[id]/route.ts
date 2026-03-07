@@ -54,6 +54,20 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const admin = await getAdminFromRequest(req);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  await sql`DELETE FROM products WHERE id = ${params.id}`;
-  return NextResponse.json({ success: true });
+  try {
+    // 1. Remove references from orders so we don't violate foreign key constraints
+    // (We keep the product_name in orders so order history is preserved)
+    await sql`UPDATE orders SET product_id = NULL WHERE product_id = ${params.id}`;
+
+    // 2. Remove references if this product is used as an order bump in other products
+    await sql`UPDATE products SET order_bump_product_id = NULL WHERE order_bump_product_id = ${params.id}`;
+
+    // 3. Now delete the product
+    await sql`DELETE FROM products WHERE id = ${params.id}`;
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting product:', error);
+    return NextResponse.json({ error: 'Failed to delete product due to database constraint' }, { status: 500 });
+  }
 }
