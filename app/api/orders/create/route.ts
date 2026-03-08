@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Razorpay from 'razorpay';
+// @ts-ignore
+import { Cashfree, CFEnvironment } from "cashfree-pg";
 import sql, { initDB } from '@/lib/db';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+// @ts-ignore
+Cashfree.XClientId = process.env.CASHFREE_APP_ID!;
+// @ts-ignore
+Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY!;
+// @ts-ignore
+Cashfree.XEnvironment = process.env.CASHFREE_ENVIRONMENT === "PRODUCTION" ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,13 +45,25 @@ export async function POST(req: NextRequest) {
       });
 
       const totalAmount = enrichedItems.reduce((s: number, i: any) => s + Number(i.price), 0);
-      const amountPaisa = Math.round(totalAmount * 100);
+      let phone = buyerWhatsapp.replace(/[^0-9]/g, '');
+      if (phone.length === 10) phone = '+91' + phone;
 
-      const rzpOrder = await razorpay.orders.create({
-        amount: amountPaisa,
-        currency: 'INR',
-        notes: { buyerEmail, buyerName },
-      });
+      const order_id = `cf_cart_${Date.now()}`;
+      const request = {
+        order_id: order_id,
+        order_amount: totalAmount,
+        order_currency: 'INR',
+        customer_details: {
+          customer_id: `cust_${Date.now()}`,
+          customer_name: buyerName,
+          customer_email: buyerEmail,
+          customer_phone: phone,
+        },
+      };
+
+      // @ts-ignore
+      const cfResponse = await Cashfree.PGCreateOrder("2023-08-01", request);
+      const paymentSessionId = cfResponse.data.payment_session_id;
 
       // Save one combined order record
       const firstProduct = dbProducts[0];
@@ -60,11 +75,11 @@ export async function POST(req: NextRequest) {
           (${firstProduct?.id || null},
            ${enrichedItems.map((i: any) => i.name).join(', ')},
            ${buyerName}, ${buyerEmail}, ${buyerWhatsapp},
-           ${rzpOrder.id}, ${totalAmount}, 'pending',
+           ${cfResponse.data.order_id}, ${totalAmount}, 'pending',
            ${JSON.stringify(enrichedItems)}::jsonb)
       `;
 
-      return NextResponse.json({ orderId: rzpOrder.id, amount: amountPaisa });
+      return NextResponse.json({ orderId: cfResponse.data.order_id, paymentSessionId: paymentSessionId });
     }
 
     // ── SINGLE PRODUCT MODE ────────────────────────────────────────────────
@@ -91,13 +106,28 @@ export async function POST(req: NextRequest) {
     const basePrice = parseFloat(product.discounted_price);
     const bumpAmount = bumpProduct && bumpPrice ? parseFloat(bumpPrice) : 0;
     const total = basePrice + bumpAmount;
-    const amountPaisa = Math.round(total * 100);
+    let phone = buyerWhatsapp.replace(/[^0-9]/g, '');
+    if (phone.length === 10) phone = '+91' + phone;
 
-    const rzpOrder = await razorpay.orders.create({
-      amount: amountPaisa,
-      currency: 'INR',
-      notes: { buyerEmail, buyerName, productSlug },
-    });
+    const order_id = `cf_${product.id}_${Date.now()}`;
+    const request = {
+      order_id: order_id,
+      order_amount: total,
+      order_currency: 'INR',
+      customer_details: {
+        customer_id: `cust_${Date.now()}`,
+        customer_name: buyerName,
+        customer_email: buyerEmail,
+        customer_phone: phone,
+      },
+      order_meta: {
+        return_url: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/payment-success?order_id={order_id}`
+      }
+    };
+
+    // @ts-ignore
+    const cfResponse = await Cashfree.PGCreateOrder("2023-08-01", request);
+    const paymentSessionId = cfResponse.data.payment_session_id;
 
     // Build cart_items for single order (with bump)
     const cartItemsData = [
@@ -112,11 +142,11 @@ export async function POST(req: NextRequest) {
       VALUES
         (${product.id}, ${product.name},
          ${buyerName}, ${buyerEmail}, ${buyerWhatsapp},
-         ${rzpOrder.id}, ${total}, 'pending',
+         ${cfResponse.data.order_id}, ${total}, 'pending',
          ${JSON.stringify(cartItemsData)}::jsonb)
     `;
 
-    return NextResponse.json({ orderId: rzpOrder.id, amount: amountPaisa });
+    return NextResponse.json({ orderId: cfResponse.data.order_id, paymentSessionId: paymentSessionId });
   } catch (error) {
     console.error('Order create error:', error);
     return NextResponse.json({ error: String(error) }, { status: 500 });

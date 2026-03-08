@@ -23,9 +23,6 @@ export default function CartCheckoutPage() {
 
     useEffect(() => {
         if (count === 0) router.replace('/');
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        document.body.appendChild(script);
     }, [count]);
 
     const handlePay = async () => {
@@ -48,38 +45,42 @@ export default function CartCheckoutPage() {
             const order = await res.json();
             if (!res.ok) throw new Error(order.error);
 
-            const rzpOptions = {
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-                amount: order.amount,
-                currency: 'INR',
-                order_id: order.orderId,
-                name: storeName,
-                description: `${count} Product${count > 1 ? 's' : ''} Order`,
-                prefill: { name: form.name, email: form.email, contact: form.whatsapp },
-                theme: { color: '#FFD700' },
-                handler: async (response: any) => {
-                    const verifyRes = await fetch('/api/orders/verify', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                        }),
-                    });
-                    const vData = await verifyRes.json();
-                    if (vData.success) {
-                        if (window.fbq) window.fbq('track', 'Purchase', { value: total, currency: 'INR' });
-                        clearCart();
-                        router.push(`/payment-success?name=${encodeURIComponent(form.name)}&product=${encodeURIComponent(`${count} Products`)}&multi=true`);
-                    } else {
-                        toast.error('Payment verification failed. Contact support.');
-                        setPaying(false);
-                    }
-                },
-                modal: { ondismiss: () => setPaying(false) },
-            };
-            new window.Razorpay(rzpOptions).open();
+            // @ts-ignore
+            const { load } = await import('@cashfreepayments/cashfree-js');
+            const cashfree = await load({
+                mode: process.env.NEXT_PUBLIC_CASHFREE_ENVIRONMENT === 'PRODUCTION' ? 'production' : 'sandbox',
+            });
+
+            const result: any = await cashfree.checkout({
+                paymentSessionId: order.paymentSessionId,
+                redirectTarget: "_modal",
+            });
+
+            if (result?.error) {
+                toast.error(result.error.message || "Payment cancelled or failed");
+                setPaying(false);
+                return;
+            }
+
+            if (result?.paymentDetails || result == null) {
+                // Verify payment
+                const verifyRes = await fetch('/api/orders/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: order.orderId }),
+                });
+
+                const vData = await verifyRes.json();
+                if (vData.success) {
+                    if (window.fbq) window.fbq('track', 'Purchase', { value: total, currency: 'INR' });
+                    clearCart();
+                    router.push(`/payment-success?name=${encodeURIComponent(form.name)}&product=${encodeURIComponent(`${count} Products`)}&multi=true`);
+                } else {
+                    toast.error('Payment verification failed.');
+                    setPaying(false);
+                }
+            }
+
         } catch (err: any) {
             toast.error(err.message || 'Something went wrong');
             setPaying(false);
@@ -144,7 +145,7 @@ export default function CartCheckoutPage() {
 
                         {/* Trust */}
                         <div className="grid grid-cols-2 gap-3 mt-4">
-                            {[{ icon: Shield, text: 'Secure Payment' }, { icon: Lock, text: 'Razorpay Encrypted' }].map(({ icon: Icon, text }) => (
+                            {[{ icon: Shield, text: 'Secure Payment' }, { icon: Lock, text: 'Cashfree Secured' }].map(({ icon: Icon, text }) => (
                                 <div key={text} className="flex items-center gap-2 bg-dark-2 rounded-xl p-3 border border-white/5">
                                     <Icon className="w-4 h-4 text-gold" />
                                     <span className="text-gray-400 text-xs">{text}</span>
@@ -193,7 +194,7 @@ export default function CartCheckoutPage() {
 
                         <p className="text-center text-xs text-gray-600 mt-3 flex items-center justify-center gap-1">
                             <Lock className="w-3 h-3" />
-                            256-bit SSL secured by Razorpay
+                            256-bit SSL secured by Cashfree
                         </p>
                     </div>
                 </div>

@@ -1,25 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { Cashfree, CFEnvironment } from "cashfree-pg";
 import sql from '@/lib/db';
 import { sendPurchaseEmail, sendWhatsAppMessage, sendAdminSaleAlert } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return NextResponse.json({ error: 'Missing payment details' }, { status: 400 });
+    const orderId = req.json ? (await req.json()).orderId : null;
+    if (!orderId) {
+      return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });
     }
 
-    // ── Verify signature ───────────────────────────────────────────────────
-    const body = razorpay_order_id + '|' + razorpay_payment_id;
-    const expected = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-      .update(body)
-      .digest('hex');
+    // @ts-ignore
+    Cashfree.XClientId = process.env.CASHFREE_APP_ID!;
+    // @ts-ignore
+    Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY!;
+    // @ts-ignore
+    Cashfree.XEnvironment = process.env.CASHFREE_ENVIRONMENT === "PRODUCTION" ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
 
-    if (expected !== razorpay_signature) {
-      return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 });
+    // Fetch order from Cashfree
+    // @ts-ignore
+    const response = await Cashfree.PGOrderFetchPayments("2023-08-01", orderId);
+    // Find successful payment
+    const payment = response.data?.find((p: any) => p.payment_status === "SUCCESS");
+
+    if (!payment) {
+      return NextResponse.json({ error: 'Payment verification failed or pending' }, { status: 400 });
     }
+
+    const { payment_id } = payment;
+    const razorpay_order_id = orderId;
+    const razorpay_payment_id = payment_id;
+    const razorpay_signature = "cf_verified"; // Place holder for CF
+
 
     // ── Fetch order ────────────────────────────────────────────────────────
     const orders = await sql`

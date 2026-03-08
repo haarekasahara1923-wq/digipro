@@ -61,11 +61,6 @@ export default function CheckoutPage() {
         setLoading(false);
       })
       .catch(() => { setLoading(false); router.push('/'); });
-
-    // Load Razorpay SDK
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    document.body.appendChild(script);
   }, [slug]);
 
   const handlePay = async () => {
@@ -93,60 +88,49 @@ export default function CheckoutPage() {
       const order = await res.json();
       if (!res.ok) throw new Error(order.error);
 
-      // Open Razorpay
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: 'INR',
-        order_id: order.orderId,
-        name: storeName,
-        description: order.productName,
-        image: product?.image_url,
-        prefill: {
-          name: form.name,
-          email: form.email,
-          contact: form.whatsapp,
-        },
-        theme: { color: '#FFD700' },
-        handler: async (response: any) => {
-          // Verify payment
-          const verifyRes = await fetch('/api/orders/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            }),
-          });
+      // @ts-ignore
+      const { load } = await import('@cashfreepayments/cashfree-js');
+      const cashfree = await load({
+        mode: process.env.NEXT_PUBLIC_CASHFREE_ENVIRONMENT === 'PRODUCTION' ? 'production' : 'sandbox',
+      });
 
-          const verifyData = await verifyRes.json();
+      const result: any = await cashfree.checkout({
+        paymentSessionId: order.paymentSessionId,
+        redirectTarget: "_modal"
+      });
 
-          if (verifyData.success) {
-            // FB Pixel Purchase
-            if (window.fbq) {
-              window.fbq('track', 'Purchase', {
-                value: parseFloat(product?.discounted_price || '0'),
-                currency: 'INR',
-                content_name: product?.name,
-              });
-            }
+      if (result?.error) {
+        toast.error(result.error.message || "Payment cancelled or failed");
+        setPaying(false);
+        return;
+      }
 
-            router.push(
-              `/payment-success?name=${encodeURIComponent(form.name)}&product=${encodeURIComponent(order.productName)}`
-            );
-          } else {
-            toast.error('Payment verification failed. Contact support.');
-            setPaying(false);
+      if (result?.paymentDetails || result == null) {
+        const verifyRes = await fetch('/api/orders/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: order.orderId }),
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.success) {
+          if (window.fbq) {
+            window.fbq('track', 'Purchase', {
+              value: parseFloat(product?.discounted_price || '0'),
+              currency: 'INR',
+              content_name: product?.name,
+            });
           }
-        },
-        modal: {
-          ondismiss: () => { setPaying(false); },
-        },
-      };
+          router.push(
+            `/payment-success?name=${encodeURIComponent(form.name)}&product=${encodeURIComponent(product?.name || '')}`
+          );
+        } else {
+          toast.error('Payment verification failed.');
+          setPaying(false);
+        }
+      }
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
     } catch (err: any) {
       toast.error(err.message || 'Something went wrong');
       setPaying(false);
@@ -227,7 +211,7 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { icon: Shield, text: 'Secure Payment' },
-                { icon: Lock, text: 'Razorpay Encrypted' },
+                { icon: Lock, text: 'Cashfree Secured' },
               ].map(({ icon: Icon, text }) => (
                 <div key={text} className="flex items-center gap-2 bg-dark-2 rounded-xl p-3 border border-white/5">
                   <Icon className="w-4 h-4 text-gold" />
@@ -303,7 +287,7 @@ export default function CheckoutPage() {
 
             <p className="text-center text-xs text-gray-600 mt-4 flex items-center justify-center gap-2">
               <Lock className="w-3 h-3" />
-              Your payment is protected by Razorpay's 256-bit SSL encryption
+              Your payment is protected by Cashfree's 256-bit SSL encryption
             </p>
           </div>
         </div>
