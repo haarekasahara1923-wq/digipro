@@ -15,7 +15,7 @@ import { useCart } from '@/context/CartContext';
 
 declare global {
   interface Window {
-    Razorpay: any; fbq: any;
+    fbq: any;
     paypal: any;
   }
 }
@@ -64,15 +64,12 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
       });
   }, [params.slug]);
 
-  // Load Razorpay script
+  // FB Pixel ViewContent
   useEffect(() => {
     if (!product) return;
     if (window.fbq) window.fbq('track', 'ViewContent', {
       content_name: product.name, value: parseFloat(product.discounted_price), currency: 'INR',
     });
-    const s = document.createElement('script');
-    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    document.body.appendChild(s);
   }, [product]);
 
   // Load & render PayPal button
@@ -98,7 +95,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               productSlug: product.slug,
               bumpSlug: bumpAdded ? product.order_bump_slug : undefined,
               bumpPriceUsd: bumpAdded && product.order_bump_price
-                ? (parseFloat(product.order_bump_price) / 85).toFixed(2)  // rough INR→USD
+                ? (parseFloat(product.order_bump_price) / 85).toFixed(2)
                 : undefined,
               buyerName: form.name, buyerEmail: form.email, buyerWhatsapp: form.whatsapp,
             }),
@@ -154,7 +151,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const bumpPrice = product.order_bump_price ? parseFloat(product.order_bump_price) : 0;
   const totalPrice = mainPrice + (bumpAdded ? bumpPrice : 0);
   const mainPriceUsd = product.price_usd ? parseFloat(product.price_usd) : 0;
-  const totalPriceUsd = mainPriceUsd; // USD bump price calculated in PayPal flow
+  const totalPriceUsd = mainPriceUsd;
   const bonusLinks: BonusLink[] = Array.isArray(product.bonus_links) ? product.bonus_links : [];
   const inCart = isInCart(product.slug);
   const hasUsd = !!product.price_usd;
@@ -171,7 +168,8 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
     toast.success('Added to cart!');
   };
 
-  const handleRazorpay = async () => {
+  // ── Cashfree INR Payment ──────────────────────────────────────────────────
+  const handleCashfree = async () => {
     if (!form.name.trim()) { toast.error('Enter name'); return; }
     if (!form.email.includes('@')) { toast.error('Enter valid email'); return; }
     if (form.whatsapp.replace(/\D/g, '').length < 10) { toast.error('Enter valid WhatsApp'); return; }
@@ -179,23 +177,49 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
     try {
       const res = await fetch('/api/orders/create', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productSlug: product.slug, bumpSlug: bumpAdded ? product.order_bump_slug : undefined, bumpPrice: bumpAdded ? bumpPrice : undefined, buyerName: form.name, buyerEmail: form.email, buyerWhatsapp: form.whatsapp }),
+        body: JSON.stringify({
+          productSlug: product.slug,
+          bumpSlug: bumpAdded ? product.order_bump_slug : undefined,
+          bumpPrice: bumpAdded ? bumpPrice : undefined,
+          buyerName: form.name, buyerEmail: form.email, buyerWhatsapp: form.whatsapp,
+        }),
       });
       const order = await res.json();
       if (!res.ok) throw new Error(order.error);
-      new window.Razorpay({
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, amount: order.amount, currency: 'INR',
-        order_id: order.orderId, name: storeName, description: product.name,
-        prefill: { name: form.name, email: form.email, contact: form.whatsapp },
-        theme: { color: '#FFD700' },
-        handler: async (response: any) => {
-          const vRes = await fetch('/api/orders/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(response) });
-          const vData = await vRes.json();
-          if (vData.success) router.push(`/payment-success?name=${encodeURIComponent(form.name)}&product=${encodeURIComponent(product.name)}`);
-          else { toast.error('Verification failed'); setPaying(false); }
-        },
-        modal: { ondismiss: () => setPaying(false) },
-      }).open();
+
+      // @ts-ignore
+      const { load } = await import('@cashfreepayments/cashfree-js');
+      const cashfree = await load({
+        mode: process.env.NEXT_PUBLIC_CASHFREE_ENVIRONMENT === 'PRODUCTION' ? 'production' : 'sandbox',
+      });
+
+      const result: any = await cashfree.checkout({
+        paymentSessionId: order.paymentSessionId,
+        redirectTarget: '_modal',
+      });
+
+      if (result?.error) {
+        toast.error(result.error.message || 'Payment cancelled or failed');
+        setPaying(false);
+        return;
+      }
+
+      if (result?.paymentDetails || result == null) {
+        // Verify with backend
+        const verifyRes = await fetch('/api/orders/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: order.orderId }),
+        });
+        const vData = await verifyRes.json();
+        if (vData.success) {
+          if (window.fbq) window.fbq('track', 'Purchase', { value: totalPrice, currency: 'INR' });
+          router.push(`/payment-success?name=${encodeURIComponent(form.name)}&product=${encodeURIComponent(product.name)}`);
+        } else {
+          toast.error('Verification failed. Contact support.');
+          setPaying(false);
+        }
+      }
     } catch (err: any) {
       toast.error(err.message || 'Something went wrong');
       setPaying(false);
@@ -287,7 +311,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                 <p className="text-xs text-gray-500 mb-3 uppercase tracking-wider font-bold">Select Payment Currency</p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { key: 'INR', flag: '🇮🇳', label: 'Indian Rupee', price: `₹${mainPrice.toLocaleString('en-IN')}`, sub: 'Razorpay • UPI • Cards • NetBanking' },
+                    { key: 'INR', flag: '🇮🇳', label: 'Indian Rupee', price: `₹${mainPrice.toLocaleString('en-IN')}`, sub: 'Cashfree • UPI • Cards • NetBanking' },
                     { key: 'USD', flag: '🌍', label: 'US Dollar', price: `$${mainPriceUsd.toFixed(2)}`, sub: 'PayPal • International Cards' },
                   ].map(opt => (
                     <button key={opt.key} onClick={() => { setCurrency(opt.key as 'INR' | 'USD'); paypalRendered.current = false; setShowForm(false); }}
@@ -322,7 +346,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                       <span className="text-blue-400 text-sm font-medium">USD</span>
                     </div>
                   </div>
-                  <p className="text-gray-600 text-xs">Paid via PayPal. Also ₹{mainPrice.toLocaleString('en-IN')} INR via Razorpay.</p>
+                  <p className="text-gray-600 text-xs">Paid via PayPal. Also ₹{mainPrice.toLocaleString('en-IN')} INR via Cashfree.</p>
                 </>
               )}
             </div>
@@ -395,12 +419,14 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                       <label className="text-xs text-gray-500 mb-1.5 block">{label} *</label>
                       <input type={type} placeholder={placeholder} value={form[key as keyof typeof form]}
                         onChange={e => setForm({ ...form, [key]: e.target.value })}
-                        className="input-dark text-sm" onKeyDown={e => e.key === 'Enter' && handleRazorpay()} />
+                        className="input-dark text-sm" onKeyDown={e => e.key === 'Enter' && handleCashfree()} />
                     </div>
                   ))}
-                  <button onClick={handleRazorpay} disabled={paying}
+                  <button onClick={handleCashfree} disabled={paying}
                     className="btn-gold w-full py-4 rounded-xl font-black uppercase tracking-wider text-sm">
-                    {paying ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />Processing...</span> : `Pay ₹${(bumpAdded ? mainPrice + bumpPrice : mainPrice).toLocaleString('en-IN')} via Razorpay`}
+                    {paying
+                      ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />Processing...</span>
+                      : `Pay ₹${(bumpAdded ? mainPrice + bumpPrice : mainPrice).toLocaleString('en-IN')} Securely`}
                   </button>
                   <button onClick={() => setShowForm(false)} className="w-full text-xs text-gray-600 hover:text-gray-400 transition-colors">← Back</button>
                 </div>

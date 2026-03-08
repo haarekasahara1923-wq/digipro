@@ -43,7 +43,7 @@ export default function AboutPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                     {[
                         { icon: Zap, title: 'Instant Delivery', desc: 'Get your products immediately after payment via email and WhatsApp.' },
-                        { icon: Shield, title: 'Secure Payments', desc: 'All transactions powered by Razorpay — India\'s most trusted payment gateway.' },
+                        { icon: Shield, title: 'Secure Payments', desc: 'All transactions powered by Cashfree — India\'s most trusted payment gateway.' },
                         { icon: Award, title: 'Premium Quality', desc: 'Every product is carefully curated to deliver real, tangible value.' },
                     ].map(({ icon: Icon, title, desc }) => (
                         <div key={title} className="bg-dark-2 border border-white/5 rounded-2xl p-6 hover:border-gold/20 transition-colors">

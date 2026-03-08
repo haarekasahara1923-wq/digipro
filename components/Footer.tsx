@@ -12,7 +12,7 @@ export default function Footer() {
             <div className="border-b border-white/5 py-4">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap justify-center gap-6 md:gap-12">
                     {[
-                        { icon: Shield, text: 'Secure Payments via Razorpay' },
+                        { icon: Shield, text: 'Secure Payments via Cashfree' },
                         { icon: Zap, text: 'Instant Digital Delivery' },
                         { icon: Mail, text: 'Instant Email Delivery' },
                     ].map(({ icon: Icon, text }) => (
@@ -86,7 +86,7 @@ export default function Footer() {
                         © {year} {storeName}. All rights reserved.
                     </p>
                     <p className="text-gray-700 text-xs flex items-center gap-1">
-                        Made with <Heart className="w-3 h-3 text-red-500 fill-red-500" /> · Secure payments by Razorpay
+                        Made with <Heart className="w-3 h-3 text-red-500 fill-red-500" /> · Secure payments by Cashfree
                     </p>
                 </div>
             </div>
