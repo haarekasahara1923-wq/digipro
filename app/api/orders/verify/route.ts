@@ -1,44 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Cashfree, CFEnvironment } from "cashfree-pg";
+import { Cashfree, CFEnvironment } from 'cashfree-pg';
 import sql from '@/lib/db';
-import { sendPurchaseEmail, sendWhatsAppMessage, sendAdminSaleAlert } from '@/lib/notifications';
+import { sendPurchaseEmail, sendAdminSaleAlert } from '@/lib/notifications';
+
+function createCashfreeClient() {
+  // @ts-ignore - cashfree-pg v5 takes apiVersion as first constructor arg
+  const cf = new Cashfree('2023-08-01') as any;
+  cf.XClientId = process.env.CASHFREE_APP_ID!;
+  cf.XClientSecret = process.env.CASHFREE_SECRET_KEY!;
+  cf.XEnvironment =
+    process.env.CASHFREE_ENVIRONMENT === 'PRODUCTION'
+      ? CFEnvironment.PRODUCTION
+      : CFEnvironment.SANDBOX;
+  return cf;
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const orderId = req.json ? (await req.json()).orderId : null;
+    const { orderId } = await req.json();
     if (!orderId) {
       return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });
     }
 
-    // @ts-ignore
-    Cashfree.XClientId = process.env.CASHFREE_APP_ID!;
-    // @ts-ignore
-    Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY!;
-    // @ts-ignore
-    Cashfree.XEnvironment = process.env.CASHFREE_ENVIRONMENT === "PRODUCTION" ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
+    const cf = createCashfreeClient();
 
-    // Fetch order from Cashfree
-    // @ts-ignore
-    const response = await Cashfree.PGOrderFetchPayments("2023-08-01", orderId);
-    // Find successful payment
-    const payment = response.data?.find((p: any) => p.payment_status === "SUCCESS");
+    // ── Fetch payments from Cashfree ─────────────────────────────────────
+    const response = await cf.PGOrderFetchPayments(orderId);
+    const payments: any[] = response.data || [];
+    const payment = payments.find((p: any) => p.payment_status === 'SUCCESS');
 
     if (!payment) {
       return NextResponse.json({ error: 'Payment verification failed or pending' }, { status: 400 });
     }
 
-    const { payment_id } = payment;
-    const razorpay_order_id = orderId;
-    const razorpay_payment_id = payment_id;
-    const razorpay_signature = "cf_verified"; // Place holder for CF
+    const payment_id = payment.cf_payment_id || payment.payment_id;
 
-
-    // ── Fetch order ────────────────────────────────────────────────────────
+    // ── Fetch order from DB ────────────────────────────────────────────────
     const orders = await sql`
       SELECT o.*, p.drive_link, p.name AS product_name_from_product, p.bonus_links
       FROM orders o
       LEFT JOIN products p ON o.product_id = p.id
-      WHERE o.razorpay_order_id = ${razorpay_order_id}
+      WHERE o.razorpay_order_id = ${orderId}
     `;
     if (orders.length === 0) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     const order = orders[0];
@@ -47,9 +49,9 @@ export async function POST(req: NextRequest) {
     await sql`
       UPDATE orders SET
         status = 'paid',
-        razorpay_payment_id = ${razorpay_payment_id},
-        razorpay_signature  = ${razorpay_signature}
-      WHERE razorpay_order_id = ${razorpay_order_id}
+        razorpay_payment_id = ${String(payment_id)},
+        razorpay_signature  = 'cashfree_verified'
+      WHERE razorpay_order_id = ${orderId}
     `;
 
     // ── Build all links to deliver ─────────────────────────────────────────
@@ -61,7 +63,6 @@ export async function POST(req: NextRequest) {
 
     let allLinks: LinkGroup[] = [];
 
-    // Use cart_items if available (multi-product or single+bump)
     const cartItems = order.cart_items;
     if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
       allLinks = cartItems.map((item: any) => ({
@@ -70,7 +71,6 @@ export async function POST(req: NextRequest) {
         bonusLinks: item.bonusLinks || item.bonus_links || [],
       }));
     } else {
-      // Legacy single product
       allLinks = [{
         productName: order.product_name || order.product_name_from_product,
         driveLink: order.drive_link || '',
@@ -95,21 +95,7 @@ export async function POST(req: NextRequest) {
       console.error('❌ Email failed:', e);
     }
 
-    // ── 2. WhatsApp to buyer ───────────────────────────────────────────────
-    /* Temporarily dropped as per request
-    try {
-      await sendWhatsAppMessage({
-        phoneNumber: order.buyer_whatsapp,
-        buyerName: order.buyer_name,
-        productName,
-        allLinks,
-      });
-    } catch (e) {
-      console.error('❌ WhatsApp failed:', e);
-    }
-    */
-
-    // ── 3. Admin sale alert ────────────────────────────────────────────────
+    // ── 2. Admin sale alert ────────────────────────────────────────────────
     try {
       await sendAdminSaleAlert({
         buyerName: order.buyer_name,
@@ -123,7 +109,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Mark link sent ─────────────────────────────────────────────────────
-    await sql`UPDATE orders SET drive_link_sent = true WHERE razorpay_order_id = ${razorpay_order_id}`;
+    await sql`UPDATE orders SET drive_link_sent = true WHERE razorpay_order_id = ${orderId}`;
 
     return NextResponse.json({ success: true, buyerName: order.buyer_name, productName });
   } catch (error) {

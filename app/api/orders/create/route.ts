@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-// @ts-ignore
-import { Cashfree, CFEnvironment } from "cashfree-pg";
+import { Cashfree, CFEnvironment } from 'cashfree-pg';
 import sql, { initDB } from '@/lib/db';
 
-// @ts-ignore
-Cashfree.XClientId = process.env.CASHFREE_APP_ID!;
-// @ts-ignore
-Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY!;
-// @ts-ignore
-Cashfree.XEnvironment = process.env.CASHFREE_ENVIRONMENT === "PRODUCTION" ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
+function createCashfreeClient() {
+  // @ts-ignore - cashfree-pg v5 takes apiVersion as first constructor arg
+  const cf = new Cashfree('2023-08-01') as any;
+  cf.XClientId = process.env.CASHFREE_APP_ID!;
+  cf.XClientSecret = process.env.CASHFREE_SECRET_KEY!;
+  cf.XEnvironment =
+    process.env.CASHFREE_ENVIRONMENT === 'PRODUCTION'
+      ? CFEnvironment.PRODUCTION
+      : CFEnvironment.SANDBOX;
+  return cf;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,6 +23,8 @@ export async function POST(req: NextRequest) {
     if (!buyerName || !buyerEmail || !buyerWhatsapp) {
       return NextResponse.json({ error: 'Buyer details required' }, { status: 400 });
     }
+
+    const cf = createCashfreeClient();
 
     // ── CART MODE (multiple products) ──────────────────────────────────────
     if (body.cartItems && Array.isArray(body.cartItems) && body.cartItems.length > 0) {
@@ -50,7 +56,7 @@ export async function POST(req: NextRequest) {
 
       const order_id = `cf_cart_${Date.now()}`;
       const request = {
-        order_id: order_id,
+        order_id,
         order_amount: totalAmount,
         order_currency: 'INR',
         customer_details: {
@@ -61,11 +67,10 @@ export async function POST(req: NextRequest) {
         },
       };
 
-      // @ts-ignore
-      const cfResponse = await Cashfree.PGCreateOrder("2023-08-01", request);
+      const cfResponse = await cf.PGCreateOrder(request);
       const paymentSessionId = cfResponse.data.payment_session_id;
 
-      // Save one combined order record
+      // Save combined order record
       const firstProduct = dbProducts[0];
       await sql`
         INSERT INTO orders
@@ -79,7 +84,7 @@ export async function POST(req: NextRequest) {
            ${JSON.stringify(enrichedItems)}::jsonb)
       `;
 
-      return NextResponse.json({ orderId: cfResponse.data.order_id, paymentSessionId: paymentSessionId });
+      return NextResponse.json({ orderId: cfResponse.data.order_id, paymentSessionId });
     }
 
     // ── SINGLE PRODUCT MODE ────────────────────────────────────────────────
@@ -106,12 +111,13 @@ export async function POST(req: NextRequest) {
     const basePrice = parseFloat(product.discounted_price);
     const bumpAmount = bumpProduct && bumpPrice ? parseFloat(bumpPrice) : 0;
     const total = basePrice + bumpAmount;
+
     let phone = buyerWhatsapp.replace(/[^0-9]/g, '');
     if (phone.length === 10) phone = '+91' + phone;
 
     const order_id = `cf_${product.id}_${Date.now()}`;
     const request = {
-      order_id: order_id,
+      order_id,
       order_amount: total,
       order_currency: 'INR',
       customer_details: {
@@ -120,13 +126,9 @@ export async function POST(req: NextRequest) {
         customer_email: buyerEmail,
         customer_phone: phone,
       },
-      order_meta: {
-        return_url: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/payment-success?order_id={order_id}`
-      }
     };
 
-    // @ts-ignore
-    const cfResponse = await Cashfree.PGCreateOrder("2023-08-01", request);
+    const cfResponse = await cf.PGCreateOrder(request);
     const paymentSessionId = cfResponse.data.payment_session_id;
 
     // Build cart_items for single order (with bump)
@@ -146,7 +148,7 @@ export async function POST(req: NextRequest) {
          ${JSON.stringify(cartItemsData)}::jsonb)
     `;
 
-    return NextResponse.json({ orderId: cfResponse.data.order_id, paymentSessionId: paymentSessionId });
+    return NextResponse.json({ orderId: cfResponse.data.order_id, paymentSessionId });
   } catch (error) {
     console.error('Order create error:', error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
