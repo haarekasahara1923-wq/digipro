@@ -48,6 +48,8 @@ export default function Footer() {
                             { href: '/', label: 'Store' },
                             { href: '/about', label: 'About Us' },
                             { href: '/contact', label: 'Contact Us' },
+                            { href: '/terms', label: 'Terms & Conditions' },
+                            { href: '/refunds', label: 'Refunds & Cancellations' },
                         ].map(({ href, label }) => (
                             <li key={href}>
                                 <Link href={href} className="text-gray-500 hover:text-gold text-sm transition-colors">
@@ -64,11 +66,20 @@ export default function Footer() {
                     <ul className="space-y-3">
                         <li>
                             <a
-                                href="mailto:digipro1923@gmail.com"
+                                href="mailto:hrdazo2022@gmail.com"
                                 className="flex items-center gap-2 text-gray-500 hover:text-gold text-sm transition-colors"
                             >
                                 <Mail className="w-3.5 h-3.5 text-gold" />
-                                digipro1923@gmail.com
+                                hrdazo2022@gmail.com
+                            </a>
+                        </li>
+                        <li>
+                            <a
+                                href="tel:+919457440300"
+                                className="flex items-center gap-2 text-gray-500 hover:text-gold text-sm transition-colors"
+                            >
+                                <Phone className="w-3.5 h-3.5 text-gold" />
+                                +91 94574 40300
                             </a>
                         </li>
                         <li className="flex items-start gap-2 text-gray-500 text-sm">
