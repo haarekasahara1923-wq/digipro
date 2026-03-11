@@ -80,7 +80,7 @@ export default function AboutPage() {
                         { icon: Shield, title: 'Cashfree Secured', desc: 'All transactions are encrypted and powered by Cashfree — India\'s most trusted payment gateway.' },
                         { icon: Award, title: 'Premium Quality', desc: 'Every product is carefully curated and tested to deliver real, actionable, tangible value.' },
                         { icon: Lock, title: 'Private & Secure', desc: 'Your personal information is never shared. Links are delivered privately to your email only.' },
-                        { icon: Users, title: 'Growing Community', desc: 'Join thousands of learners and creators who trust Digipro for their digital needs.' },
+                        { icon: Users, title: 'Growing Community', desc: `Join thousands of learners and creators who trust ${storeName} for their digital needs.` },
                         { icon: TrendingUp, title: 'Real Results', desc: 'Our products are designed to create measurable impact in your learning and business journey.' },
                     ].map(({ icon: Icon, title, desc }) => (
                         <div key={title} className="bg-dark-2 border border-white/5 rounded-2xl p-6 hover:border-gold/25 transition-all duration-300 group">

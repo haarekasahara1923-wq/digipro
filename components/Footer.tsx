@@ -94,7 +94,7 @@ export default function Footer() {
             <div className="border-t border-white/5 py-5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
                     <p className="text-gray-600 text-xs">
-                        © {year} {storeName}. All rights reserved.
+                        © {year} Namit Harish Chandra Sharma. All rights reserved.
                     </p>
                     <p className="text-gray-700 text-xs flex items-center gap-1">
                         Made with <Heart className="w-3 h-3 text-red-500 fill-red-500" /> · Secure payments by Cashfree
