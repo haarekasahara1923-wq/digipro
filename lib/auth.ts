@@ -38,3 +38,21 @@ export async function isAdminAuthenticated(): Promise<boolean> {
     return false;
   }
 }
+
+export async function getUserFromRequest(req: NextRequest) {
+  const token = req.cookies.get('user_session')?.value;
+  if (!token) return null;
+  return await verifyToken(token);
+}
+
+export async function isUserAuthenticated(): Promise<boolean> {
+  try {
+    const cookieStore = cookies();
+    const token = cookieStore.get('user_session')?.value;
+    if (!token) return false;
+    const payload = await verifyToken(token);
+    return !!payload;
+  } catch {
+    return false;
+  }
+}

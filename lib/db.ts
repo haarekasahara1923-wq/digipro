@@ -50,6 +50,8 @@ export async function initDB() {
     )
   `;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS cart_items JSONB DEFAULT '[]'`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_type VARCHAR(50) DEFAULT 'product'`;
 
   // ── Admin table ──────────────────────────────────────────────────────────
   await sql`
@@ -58,6 +60,44 @@ export async function initDB() {
       username VARCHAR(100) UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // ── Users table ──────────────────────────────────────────────────────────
+  await sql`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      whatsapp VARCHAR(20),
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // ── Subscriptions table ──────────────────────────────────────────────────
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_subscriptions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      plan_name VARCHAR(50) NOT NULL, -- BASIC, PRO, ELITE
+      price DECIMAL(10,2) NOT NULL,
+      product_limit INTEGER, -- 10, 20, or NULL for unlimited
+      products_downloaded INTEGER DEFAULT 0,
+      start_date TIMESTAMP DEFAULT NOW(),
+      end_date TIMESTAMP NOT NULL,
+      status VARCHAR(50) DEFAULT 'active',
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
+  // ── Download history ─────────────────────────────────────────────────────
+  await sql`
+    CREATE TABLE IF NOT EXISTS download_history (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      product_id INTEGER REFERENCES products(id),
+      downloaded_at TIMESTAMP DEFAULT NOW()
     )
   `;
 }

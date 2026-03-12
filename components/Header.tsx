@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingCart, Search, Sparkles, Menu, X, Home, Info, Phone, Package } from 'lucide-react';
+import { ShoppingCart, Search, Sparkles, Menu, X, Home, Info, Phone, Package, Crown, User } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import SearchModal from './SearchModal';
 import CartDrawer from './CartDrawer';
@@ -24,6 +24,7 @@ export default function Header() {
 
     const navLinks = [
         { href: '/', label: 'Store', icon: Home },
+        { href: '/membership', label: 'Membership', icon: Crown },
         { href: '/about', label: 'About', icon: Info },
         { href: '/contact', label: 'Contact', icon: Phone },
     ];
@@ -59,6 +60,14 @@ export default function Header() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
+                        {/* Login */}
+                        <Link href="/login" 
+                            className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gold hover:bg-gold/10 transition-all border border-transparent hover:border-gold/20"
+                            aria-label="User Login"
+                        >
+                            <User className="w-4.5 h-4.5" />
+                        </Link>
+
                         {/* Search */}
                         <button
                             onClick={() => setSearchOpen(true)}

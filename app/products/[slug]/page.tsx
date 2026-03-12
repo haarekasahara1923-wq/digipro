@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
   ArrowLeft, ShoppingCart, Zap, Shield, Check, Gift,
-  Star, Lock, Share2, Copy, MessageCircle, Globe,
+  Star, Lock, Share2, Copy, MessageCircle, Globe, Crown,
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -48,11 +48,26 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const [showForm, setShowForm] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
+  const [user, setUser] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const paypalRef = useRef<HTMLDivElement>(null);
   const paypalRendered = useRef(false);
 
   const storeName = process.env.NEXT_PUBLIC_STORE_NAME || 'Digipro';
   const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(data => {
+        if (data.authenticated) {
+          setUser(data.user);
+          setSubscription(data.subscription);
+        }
+        setCheckingAuth(false);
+      });
+  }, []);
 
   useEffect(() => {
     fetch(`/api/products/${params.slug}`)
@@ -380,6 +395,51 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                   )}
                 </div>
               </div>
+            )}
+
+            {/* Membership Download */}
+            {subscription && (
+               <div className="bg-gold/10 border border-gold/30 rounded-2xl p-5 mb-6">
+                 <div className="flex items-center gap-2 mb-3">
+                   <Crown className="w-5 h-5 text-gold" />
+                   <h3 className="font-display text-xl text-white uppercase">Member Benefit</h3>
+                 </div>
+                 <p className="text-gray-400 text-sm mb-4">
+                   You have an active <strong className="text-gold">{subscription.plan_name}</strong> plan. 
+                   {subscription.product_limit 
+                     ? ` You can download ${subscription.product_limit - (subscription.products_downloaded || 0)} more products this month.`
+                     : " You have unlimited downloads this month!"}
+                 </p>
+                 <button 
+                   onClick={async () => {
+                     setPaying(true);
+                     try {
+                        const res = await fetch('/api/subscriptions/download', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ productSlug: product.slug })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error);
+                        
+                        toast.success('Access Granted!');
+                        window.open(data.driveLink, '_blank');
+                        // Refresh subscription data
+                        const meRes = await fetch('/api/auth/me');
+                        const meData = await meRes.json();
+                        if (meData.subscription) setSubscription(meData.subscription);
+                     } catch (err: any) {
+                        toast.error(err.message || 'Download failed');
+                     } finally {
+                        setPaying(false);
+                     }
+                   }}
+                   disabled={paying}
+                   className="w-full bg-white text-black py-4 rounded-xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 hover:bg-gray-100 transition-all"
+                 >
+                   {paying ? 'Checking...' : <><Zap className="w-4 h-4" /> Download Now for Free</>}
+                 </button>
+               </div>
             )}
 
             {/* Total */}
