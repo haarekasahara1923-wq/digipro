@@ -3,9 +3,11 @@ import sql from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { signToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { initDB } from '@/lib/db';
 
 export async function POST(req: Request) {
   try {
+    await initDB();
     const { name, email, password, whatsapp } = await req.json();
 
     if (!name || !email || !password) {
