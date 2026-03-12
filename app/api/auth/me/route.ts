@@ -2,6 +2,8 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import sql from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const payload = await getUserFromRequest(req);

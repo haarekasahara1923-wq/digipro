@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { User, Mail, Lock, Phone, UserPlus } from 'lucide-react';
 
-export default function RegisterPage() {
+function RegisterContent() {
   const [form, setForm] = useState({ name: '', email: '', password: '', whatsapp: '' });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -126,5 +126,17 @@ export default function RegisterPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-dark flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <RegisterContent />
+    </Suspense>
   );
 }

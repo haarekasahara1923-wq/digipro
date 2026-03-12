@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Mail, Lock, LogIn, ArrowRight } from 'lucide-react';
+import { Mail, Lock, LogIn } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginContent() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -96,5 +96,17 @@ export default function LoginPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-dark flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
